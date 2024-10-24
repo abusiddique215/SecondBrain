@@ -54,13 +54,22 @@ export const getAllVideos = async () => {
   return db.data.videos
 }
 
+type SearchResult = {
+  id: string;
+  score: number;
+};
+
 export const searchVideos = async (query: string, k: number = 5) => {
   const queryEmbedding = await generateEmbedding(query);
   const results = await searchEmbeddings(queryEmbedding, k);
-
   await db.read();
-  return results.map(result => ({
-    ...db.data.videos.find(video => video.id === result.id),
-    score: result.score
-  })).filter(Boolean);
+  if (!Array.isArray(results)) {
+    return [];
+  }
+  return results
+    .map(result => {
+      const video = db.data.videos.find(v => v.id === result.id);
+      return video ? { ...video, score: result.score } : null;
+    })
+    .filter((video): video is (DbSchema['videos'][0] & { score: number }) => video !== null);
 }
