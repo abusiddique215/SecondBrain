@@ -12,6 +12,7 @@ type AnalysisResult = {
   description: string;
   tags: string[];
   transcript: string;
+  entities: string[]; // Add this line
 };
 
 type VideoContextType = {

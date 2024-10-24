@@ -1,30 +1,50 @@
-import { HuggingFaceInference } from "langchain/llms/hf";
-import { loadSummarizationChain } from "langchain/chains";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { HuggingFaceInference } from "langchain/llms/huggingface";
+import { PromptTemplate } from "langchain/prompts";
+import { LLMChain } from "langchain/chains";
+
+// Make sure to set your Hugging Face API token in your environment variables
+const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY;
+
+if (!HUGGINGFACE_API_KEY) {
+  throw new Error("HUGGINGFACE_API_KEY is not set in the environment variables");
+}
 
 const model = new HuggingFaceInference({
-  apiKey: process.env.HUGGINGFACE_API_KEY, // Make sure to set this in your .env file
-  model: "facebook/bart-large-cnn",
+  apiKey: HUGGINGFACE_API_KEY,
+  model: "gpt2", // You can change this to a more suitable model
 });
 
-export const analyzeText = async (text: string) => {
-  // Split the text into chunks
-  const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
-  const docs = await textSplitter.createDocuments([text]);
+const template = `
+Analyze the following transcript and provide:
+1. A brief summary
+2. Key topics discussed
+3. Important entities mentioned
 
-  // Summarize the text
-  const chain = loadSummarizationChain(model, { type: "map_reduce" });
-  const res = await chain.call({
-    input_documents: docs,
-  });
+Transcript: {transcript}
 
-  // Extract entities and topics (this is a simplified version, you might want to use a more sophisticated NER model)
-  const entities = await model.call(`Extract named entities from this text: ${text}`);
-  const topics = await model.call(`What are the main topics discussed in this text: ${text}`);
+Summary:
+Topics:
+Entities:
+`;
+
+const prompt = new PromptTemplate({
+  template: template,
+  inputVariables: ["transcript"],
+});
+
+const chain = new LLMChain({ llm: model, prompt: prompt });
+
+export const analyzeText = async (transcript: string) => {
+  const result = await chain.call({ transcript: transcript });
+  
+  const [summary, topicsRaw, entitiesRaw] = result.text.split('\n\n').slice(1);
+  
+  const topics = topicsRaw.split('\n').map(topic => topic.trim()).filter(Boolean);
+  const entities = entitiesRaw.split('\n').map(entity => entity.trim()).filter(Boolean);
 
   return {
-    summary: res.text,
-    entities: entities.split(',').map((e: string) => e.trim()),
-    topics: topics.split(',').map((t: string) => t.trim()),
+    summary: summary.trim(),
+    topics,
+    entities,
   };
 };
