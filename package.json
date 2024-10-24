@@ -1,0 +1,19 @@
+{
+  "devDependencies": {
+    "@types/formidable": "^3.4.5",
+    "@types/node": "^22.7.9",
+    "@types/react": "^18.3.12"
+  },
+  "dependencies": {
+    "@ffmpeg/core": "^0.12.6",
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1",
+    "@huggingface/inference": "^2.8.1",
+    "@tensorflow-models/mobilenet": "^2.1.1",
+    "@tensorflow/tfjs": "^4.22.0",
+    "axios": "^1.7.7",
+    "formidable": "^3.5.2",
+    "langchain": "^0.3.3",
+    "next": "^15.0.1"
+  }
+}
