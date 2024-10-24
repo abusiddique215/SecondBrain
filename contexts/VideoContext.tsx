@@ -8,11 +8,12 @@ type VideoFile = {
 };
 
 type AnalysisResult = {
+  id: string;
   title: string;
   description: string;
   tags: string[];
   transcript: string;
-  entities: string[]; // Add this line
+  entities: string[];
 };
 
 type VideoContextType = {

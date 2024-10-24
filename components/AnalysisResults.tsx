@@ -10,6 +10,12 @@ const AnalysisResults: React.FC = () => {
     <div className="mt-8 p-6 bg-white rounded-lg shadow-md">
       <h3 className="text-xl font-bold mb-4">Analysis Results</h3>
       <div className="space-y-4">
+        {analysisResults.id && (
+          <div>
+            <h4 className="font-semibold">Video ID:</h4>
+            <p>{analysisResults.id}</p>
+          </div>
+        )}
         <div>
           <h4 className="font-semibold">Title:</h4>
           <p>{analysisResults.title}</p>

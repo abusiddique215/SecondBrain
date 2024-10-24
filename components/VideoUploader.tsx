@@ -5,6 +5,7 @@ import axios from 'axios';
 import { analyzeFrames } from '../utils/tensorflow';
 import { transcribeAudio } from '../utils/speechRecognition';
 import { analyzeText } from '../utils/langchain';
+import { saveAnalysisResults, searchVideos } from '../utils/db';
 
 const VideoUploader: React.FC = () => {
   const { videoFile, setVideoFile, analysisResults, setAnalysisResults } = useVideo();
@@ -12,6 +13,8 @@ const VideoUploader: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -107,18 +110,35 @@ const VideoUploader: React.FC = () => {
       // Analyze the transcript using LangChain
       const textAnalysis = await analyzeText(transcript);
 
-      setAnalysisResults({
+      const analysisResults = {
         title: 'Analyzed Video',
         description: textAnalysis.summary,
         tags: [...uniqueTags, ...textAnalysis.topics],
         transcript: transcript,
         entities: textAnalysis.entities,
-      });
+      };
+
+      // Save analysis results to the database
+      const id = await saveAnalysisResults(videoFile.name, analysisResults);
+
+      setAnalysisResults({ ...analysisResults, id });
     } catch (error) {
       console.error('Error processing video:', error);
       setError('Error processing video. Please try again.');
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchQuery) return;
+
+    try {
+      const results = await searchVideos(searchQuery);
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Error searching videos:', error);
+      setError('Error searching videos. Please try again.');
     }
   };
 
@@ -170,6 +190,38 @@ const VideoUploader: React.FC = () => {
           </div>
         )}
       </div>
+      
+      <div className="mt-8">
+        <h3 className="text-xl font-bold mb-4">Search Videos</h3>
+        <div className="flex">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-grow px-4 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter search query"
+          />
+          <button
+            onClick={handleSearch}
+            className="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Search
+          </button>
+        </div>
+        {searchResults.length > 0 && (
+          <div className="mt-4">
+            <h4 className="font-semibold mb-2">Search Results:</h4>
+            <ul className="list-disc pl-5">
+              {searchResults.map((result) => (
+                <li key={result.id} className="mb-2">
+                  {result.filename} (Score: {result.score.toFixed(2)})
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
       <AnalysisResults />
     </div>
   );

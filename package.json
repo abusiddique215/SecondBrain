@@ -11,9 +11,12 @@
     "@huggingface/inference": "^2.8.1",
     "@tensorflow-models/mobilenet": "^2.1.1",
     "@tensorflow/tfjs": "^4.22.0",
+    "@tensorflow/tfjs-node": "^4.22.0",
     "axios": "^1.7.7",
+    "faiss-node": "^0.5.1",
     "formidable": "^3.5.2",
     "langchain": "^0.3.3",
+    "lowdb": "^7.0.1",
     "next": "^15.0.1"
   }
 }
